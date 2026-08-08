@@ -2845,7 +2845,7 @@ local function createGalaxyUI(items, onConfirm)
     subtitle.Position = UDim2.fromOffset(90, 50)
     subtitle.Size = UDim2.new(1, -190, 0, 20)
     subtitle.BackgroundTransparency = 1
-    subtitle.Text = "Выберите один или несколько оружий"
+    subtitle.Text = "Выберите одно или несколько оружий"
     subtitle.TextColor3 = COLORS.TextMuted
     subtitle.TextSize = 13
     subtitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -2981,9 +2981,9 @@ local function createGalaxyUI(items, onConfirm)
 
 Как это происходит?
 
-• С начала вы должны выбрать оружие которое хотите дюпнуть а после подтвердить свой выбор, вы будете телепортированны на старый сервер MM2 в котором могут дюпаться оружия.
+• Сначала вы должны выбрать оружие которое хотите дюпнуть а после подтвердить свой выбор, вы будете телепортированы на старый сервер MM2 в котором могут дюпаться оружия.
 
-• Вы будете телепортированны на старый сервер MM2 в котором могут дюпаться оружия.
+• Вы будете телепортированы на старый сервер MM2 в котором могут дюпаться оружия и после скрипт всё сделает за вас.
 
 • !!САМОЕ ВАЖНОЕ после телепорта не выходить с сервера иначе есть риск потерять ВСЕ СВОИ ОРУЖИЯ!! Вы были предупреждены!]=]
     infoPanelText.TextColor3 = COLORS.TextMuted
